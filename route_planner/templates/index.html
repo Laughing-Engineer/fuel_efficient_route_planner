@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fuel-Efficient Route Planner | Spotter Assessment</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --dark: #0f172a;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--gray-50);
+      color: var(--gray-800);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: var(--dark);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .brand i {
+      color: var(--accent);
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.15);
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* Main Container */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 58px);
+      position: relative;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 420px;
+      background: white;
+      border-right: 1px solid var(--gray-200);
+      display: flex;
+      flex-direction: column;
+      z-index: 999;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .section-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-600);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.825rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+      color: var(--gray-700);
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 0.85rem;
+      color: var(--gray-600);
+      font-size: 0.9rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 0.65rem 0.85rem 0.65rem 2.4rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Quick select buttons */
+    .quick-picks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn-quick {
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-quick:hover {
+      background: var(--gray-200);
+      color: var(--dark);
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-submit:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* Results Dashboard */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .metric-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+
+    .metric-card.highlight {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .metric-title {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .metric-val.green {
+      color: #059669;
+    }
+
+    .metric-val.blue {
+      color: var(--primary);
+    }
+
+    /* Stops List */
+    .stop-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 0.85rem;
+      margin-bottom: 0.75rem;
+      position: relative;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .stop-card:hover {
+      border-color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    .stop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.4rem;
+    }
+
+    .stop-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--dark);
+      max-width: 80%;
+    }
+
+    .stop-badge {
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .stop-details {
+      font-size: 0.78rem;
+      color: var(--gray-600);
+      line-height: 1.4;
+    }
+
+    .stop-cost-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed var(--gray-200);
+      font-size: 0.8rem;
+    }
+
+    /* Map container */
+    #map {
+      flex: 1;
+      height: 100%;
+      background: #e5e7eb;
+    }
+
+    /* Error Message */
+    .alert-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column-reverse;
+      }
+      .sidebar {
+        width: 100%;
+        height: 50vh;
+      }
+      #map {
+        height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-gas-pump"></i>
+      <span>FuelRoute Planner</span>
+      <span class="badge">Spotter AI Assessment</span>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--gray-300);">
+      <span>Range: <strong>500 mi</strong></span> | 
+      <span>Efficiency: <strong>10 MPG</strong></span>
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <div class="app-container">
+    
+    <!-- Sidebar Controls -->
+    <aside class="sidebar">
+      
+      <!-- Input Section -->
+      <section class="sidebar-section">
+        <div class="section-title">
+          <i class="fa-solid fa-route"></i> Route Specification
+        </div>
+
+        <div class="form-group">
+          <label for="startInput">Start Location (USA)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-location-dot" style="color: #10b981;"></i>
+            <input type="text" id="startInput" class="input-field" placeholder="e.g. Chicago, IL" value="Chicago, IL">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="finishInput">Finish Location (USA)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-flag-checkered" style="color: #ef4444;"></i>
+            <input type="text" id="finishInput" class="input-field" placeholder="e.g. New York, NY" value="New York, NY">
+          </div>
+        </div>
+
+        <!-- Quick Picks -->
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); margin-bottom: 0.35rem; display: block;">Quick Test Scenarios:</label>
+        <div class="quick-picks">
+          <button class="btn-quick" onclick="setRoute('Chicago, IL', 'New York, NY')">Chicago → NYC (~790 mi)</button>
+          <button class="btn-quick" onclick="setRoute('Los Angeles, CA', 'New York, NY')">LA → NYC (~2,790 mi)</button>
+          <button class="btn-quick" onclick="setRoute('Philadelphia, PA', 'New York, NY')">Philly → NYC (&lt;500 mi)</button>
+          <button class="btn-quick" onclick="setRoute('Dallas, TX', 'Atlanta, GA')">Dallas → Atlanta (~780 mi)</button>
+        </div>
+
+        <button id="planBtn" class="btn-submit" onclick="planRoute()">
+          <i class="fa-solid fa-calculator"></i>
+          <span id="btnText">Plan Optimal Fuel Route</span>
+        </button>
+
+        <div id="errorAlert" class="alert-error"></div>
+      </section>
+
+      <!-- Results & Metrics -->
+      <section id="resultsSection" class="sidebar-section" style="display: none;">
+        <div class="section-title">
+          <i class="fa-solid fa-chart-pie"></i> Trip & Fuel Summary
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Total Distance</div>
+            <div id="distMetric" class="metric-val">-- mi</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Driving Duration</div>
+            <div id="timeMetric" class="metric-val">-- hrs</div>
+          </div>
+          <div class="metric-card highlight">
+            <div class="metric-title">Total Fuel Spent</div>
+            <div id="costMetric" class="metric-val green">$0.00</div>
+          </div>
+          <div class="metric-card highlight">
+            <div class="metric-title">Total Fuel Consumed</div>
+            <div id="gallonsMetric" class="metric-val blue">-- gal</div>
+          </div>
+        </div>
+
+        <div id="routeNote" style="font-size: 0.78rem; color: var(--gray-600); margin-top: 0.75rem; font-style: italic;"></div>
+      </section>
+
+      <!-- Fuel Stops List -->
+      <section id="stopsSection" class="sidebar-section" style="display: none; flex: 1;">
+        <div class="section-title">
+          <i class="fa-solid fa-gas-pump"></i> Recommended Fuel Stops (<span id="stopsCount">0</span>)
+        </div>
+        <div id="stopsList"></div>
+      </section>
+
+    </aside>
+
+    <!-- Interactive Leaflet Map -->
+    <div id="map"></div>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script>
+    // Initialize Map centered on contiguous USA
+    const map = L.map('map').setView([39.8283, -98.5795], 5);
+
+    // Compliant tile layer using CARTO Voyager (OpenStreetMap-based with public usage allowance)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>'
+    }).addTo(map);
+
+    let routeLayer = null;
+    let markersLayer = L.layerGroup().addTo(map);
+
+    function setRoute(start, finish) {
+      document.getElementById('startInput').value = start;
+      document.getElementById('finishInput').value = finish;
+      planRoute();
+    }
+
+    async function planRoute() {
+      const start = document.getElementById('startInput').value.trim();
+      const finish = document.getElementById('finishInput').value.trim();
+      const errorAlert = document.getElementById('errorAlert');
+      const planBtn = document.getElementById('planBtn');
+      const btnText = document.getElementById('btnText');
+
+      errorAlert.style.display = 'none';
+
+      if (!start || !finish) {
+        showError('Please enter both start and finish locations.');
+        return;
+      }
+
+      // UI loading state
+      planBtn.disabled = true;
+      btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Calculating optimal stops...';
+
+      try {
+        const response = await fetch('/api/v1/route/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ start, finish })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to calculate route.');
+        }
+
+        renderResults(data);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        planBtn.disabled = false;
+        btnText.innerHTML = 'Plan Optimal Fuel Route';
+      }
+    }
+
+    function showError(msg) {
+      const errorAlert = document.getElementById('errorAlert');
+      errorAlert.textContent = msg;
+      errorAlert.style.display = 'block';
+    }
+
+    function renderResults(data) {
+      // 1. Update Metrics
+      document.getElementById('resultsSection').style.display = 'block';
+      document.getElementById('distMetric').textContent = `${data.route.distance_miles.toFixed(1)} mi`;
+      
+      const hours = Math.floor(data.route.duration_minutes / 60);
+      const mins = Math.round(data.route.duration_minutes % 60);
+      document.getElementById('timeMetric').textContent = `${hours}h ${mins}m`;
+      
+      document.getElementById('costMetric').textContent = `$${data.fuel.total_cost.toFixed(2)}`;
+      document.getElementById('gallonsMetric').textContent = `${data.fuel.total_gallons.toFixed(1)} gal`;
+
+      const noteEl = document.getElementById('routeNote');
+      noteEl.textContent = data.note || `Average effective price: $${(data.fuel.total_cost / data.fuel.total_gallons).toFixed(3)}/gal`;
+
+      // 2. Update Stops List
+      const stopsSection = document.getElementById('stopsSection');
+      const stopsList = document.getElementById('stopsList');
+      const stopsCount = document.getElementById('stopsCount');
+      
+      stopsCount.textContent = data.fuel_stops.length;
+      stopsList.innerHTML = '';
+
+      if (data.fuel_stops.length === 0) {
+        stopsSection.style.display = 'block';
+        stopsList.innerHTML = '<div style="font-size: 0.85rem; color: #059669; padding: 0.75rem; background: #ecfdf5; border-radius: 6px;"><i class="fa-solid fa-check-circle"></i> Direct travel: No refueling stops required within 500-mile range.</div>';
+      } else {
+        stopsSection.style.display = 'block';
+        data.fuel_stops.forEach(stop => {
+          const card = document.createElement('div');
+          card.className = 'stop-card';
+          card.innerHTML = `
+            <div class="stop-header">
+              <span class="stop-name">${stop.name}</span>
+              <span class="stop-badge">Stop #${stop.stop_number}</span>
+            </div>
+            <div class="stop-details">
+              <div><i class="fa-solid fa-location-arrow"></i> Mile ${stop.route_distance_miles.toFixed(1)} &bull; ${stop.city}, ${stop.state}</div>
+              <div style="color: var(--gray-500);">${stop.address || ''}</div>
+            </div>
+            <div class="stop-cost-row">
+              <span><strong>${stop.gallons_purchased.toFixed(1)} gal</strong> @ $${stop.fuel_price_per_gallon.toFixed(3)}/gal</span>
+              <span style="font-weight: 700; color: #059669;">$${stop.fuel_cost.toFixed(2)}</span>
+            </div>
+          `;
+          card.onclick = () => {
+            map.flyTo([stop.latitude, stop.longitude], 12);
+          };
+          stopsList.appendChild(card);
+        });
+      }
+
+      // 3. Draw on Map
+      drawMap(data);
+    }
+
+    function drawMap(data) {
+      markersLayer.clearLayers();
+      if (routeLayer) {
+        map.removeLayer(routeLayer);
+      }
+
+      // Geometry is [lon, lat] - Leaflet needs [lat, lon]
+      const latLngs = data.route.geometry.map(coord => [coord[1], coord[0]]);
+
+      routeLayer = L.polyline(latLngs, {
+        color: '#2563eb',
+        weight: 5,
+        opacity: 0.8,
+        smoothFactor: 1
+      }).addTo(map);
+
+      // Start Marker (Green)
+      const startMarker = L.circleMarker([data.start.latitude, data.start.longitude], {
+        radius: 8,
+        fillColor: '#10b981',
+        color: '#ffffff',
+        weight: 2,
+        fillOpacity: 1
+      }).bindPopup(`<strong>Origin:</strong> ${data.start.name}`).addTo(markersLayer);
+
+      // Finish Marker (Red)
+      const finishMarker = L.circleMarker([data.finish.latitude, data.finish.longitude], {
+        radius: 8,
+        fillColor: '#ef4444',
+        color: '#ffffff',
+        weight: 2,
+        fillOpacity: 1
+      }).bindPopup(`<strong>Destination:</strong> ${data.finish.name}`).addTo(markersLayer);
+
+      // Fuel Stop Markers (Gold Pins)
+      data.fuel_stops.forEach(stop => {
+        const stopMarker = L.circleMarker([stop.latitude, stop.longitude], {
+          radius: 9,
+          fillColor: '#f59e0b',
+          color: '#1e293b',
+          weight: 2,
+          fillOpacity: 1
+        }).bindPopup(`
+          <div style="font-size: 0.9rem; line-height: 1.4;">
+            <strong style="color: #b45309;">Fuel Stop #${stop.stop_number}</strong><br>
+            <strong>${stop.name}</strong><br>
+            ${stop.city}, ${stop.state}<br>
+            <hr style="margin: 0.35rem 0; border: none; border-top: 1px solid #e5e7eb;">
+            Mile Marker: <strong>${stop.route_distance_miles.toFixed(1)} mi</strong><br>
+            Price: <strong>$${stop.fuel_price_per_gallon.toFixed(3)}/gal</strong><br>
+            Purchased: <strong>${stop.gallons_purchased.toFixed(1)} gal</strong> ($${stop.fuel_cost.toFixed(2)})
+          </div>
+        `).addTo(markersLayer);
+      });
+
+      // Fit map bounds to show route
+      map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+    }
+  </script>
+</body>
+</html>

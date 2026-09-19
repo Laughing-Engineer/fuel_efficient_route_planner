@@ -1,0 +1,168 @@
+{
+  "info": {
+    "name": "Fuel-Efficient Route Planner API (Spotter Assessment)",
+    "description": "API collection for testing driving route calculation, OPIS fuel stop selection, and cost optimization.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Valid Route (Chicago, IL to New York, NY)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"start\": \"Chicago, IL\",\n  \"finish\": \"New York, NY\"\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/v1/route/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "v1", "route", ""]
+        },
+        "description": "Standard medium route (~790 miles). Requires 1-2 refueling stops to respect 500-mile range."
+      }
+    },
+    {
+      "name": "2. Long Multi-Stop Route (Los Angeles, CA to New York, NY)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"start\": \"Los Angeles, CA\",\n  \"finish\": \"New York, NY\"\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/v1/route/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "v1", "route", ""]
+        },
+        "description": "Cross-country long haul (~2,790 miles). Requires multiple refueling stops across the USA."
+      }
+    },
+    {
+      "name": "3. Short Route - 0 Stops (Philadelphia, PA to New York, NY)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"start\": \"Philadelphia, PA\",\n  \"finish\": \"New York, NY\"\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/v1/route/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "v1", "route", ""]
+        },
+        "description": "Short route under 500 miles (~95 miles). Requires 0 fuel stops."
+      }
+    },
+    {
+      "name": "4. Coordinates Input (Dallas, TX to Atlanta, GA)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"start\": {\n    \"latitude\": 32.7767,\n    \"longitude\": -96.7970,\n    \"name\": \"Dallas, TX\"\n  },\n  \"finish\": {\n    \"latitude\": 33.7490,\n    \"longitude\": -84.3880,\n    \"name\": \"Atlanta, GA\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/v1/route/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "v1", "route", ""]
+        },
+        "description": "Demonstrates direct latitude/longitude input support."
+      }
+    },
+    {
+      "name": "5. Invalid Input - Missing Finish Location",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"start\": \"Chicago, IL\"\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/v1/route/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "v1", "route", ""]
+        },
+        "description": "Validation test: returns HTTP 400 when finish location is omitted."
+      }
+    },
+    {
+      "name": "6. Invalid Location - Non-USA Location",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"start\": \"Toronto, Canada\",\n  \"finish\": \"New York, NY\"\n}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/v1/route/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "v1", "route", ""]
+        },
+        "description": "Validation test: rejects locations outside the USA with HTTP 400."
+      }
+    },
+    {
+      "name": "7. Health Check Endpoint",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/v1/health/",
+          "protocol": "http",
+          "host": ["127", "0", "0", "1"],
+          "port": "8000",
+          "path": ["api", "v1", "health", ""]
+        },
+        "description": "API health check and indexed station count."
+      }
+    }
+  ]
+}
