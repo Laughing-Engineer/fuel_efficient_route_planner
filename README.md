@@ -553,11 +553,12 @@ Import this file into Postman to test:
 
 ---
 
-## 17. Future Enhancements
+## 17. Future Enhancement
 
 1. **Live Fuel Price Feeds**: Integrate real-time OPIS FTP or REST API webhooks for automated daily wholesale/retail price updates.
 2. **Alternative Routing Profiles**: Support hazmat, high-clearance, and truck-weight restrictions via OSRM truck profiles or commercial routing APIs.
 3. **Driver Hours of Service (HOS) Co-Optimization**: Combine fuel stop selection with mandatory DOT 11-hour driving / 10-hour rest break schedules.
 4. **Elevation & Grade Penalties**: Adjust effective vehicle MPG based on topographic elevation profiles (e.g. crossing the Rocky Mountains).
-#   f u e l _ e f f i c i e n t _ r o u t e _ p l a n n e r  
+#   f u e l _ e f f i c i e n t _ r o u t e _ p l a n n e r 
+ 
  
